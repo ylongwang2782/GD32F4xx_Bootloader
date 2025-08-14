@@ -4,6 +4,7 @@
 #include "gpio.h"
 #include "ymodem.h"
 #include "usart.h"
+#include "bootloader_flag.h"
 
 int boot_main(void) {
     ymodem_file_info_t file_info;
@@ -17,7 +18,7 @@ int boot_main(void) {
     printf("Application Address: 0x%08X\r\n", APP_ADDR);
     printf("\r\n");
     
-    /* Check KEY1 button state on power-up */
+    /* Check KEY1 button state on power-up first */
     if (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_RESET) {
         /* KEY1 pressed during power-up - enter bootloader mode */
         printf("KEY1 detected during power-up\r\n");
@@ -75,7 +76,61 @@ int boot_main(void) {
             HAL_Delay(100);
         }
     } else {
-        /* KEY1 not pressed - check for valid application and jump */
+        /* KEY1 not pressed - check bootloader upgrade flag in Flash */
+        printf("KEY1 not pressed, checking bootloader upgrade flag...\r\n");
+        
+        if (check_bootloader_upgrade_flag()) {
+            /* Bootloader upgrade flag detected - clear it immediately and enter bootloader mode */
+            printf("Bootloader upgrade flag detected!\r\n");
+            clear_bootloader_flag();
+            printf("Bootloader flag cleared, entering firmware update mode...\r\n");
+            printf("Ready to receive firmware via YMODEM protocol\r\n");
+            printf("Please send .bin file using YMODEM...\r\n");
+            
+            /* Wait for LED indication during bootloader mode */
+            HAL_GPIO_WritePin(RUN_LED_GPIO_Port, RUN_LED_Pin, GPIO_PIN_RESET); /* LED ON */
+            
+            /* Start YMODEM reception */
+            result = ymodem_receive_file(&file_info);
+            
+            switch (result) {
+                case YMODEM_OK:
+                    printf("\r\nFirmware update completed successfully!\r\n");
+                    printf("System will reset in 1 seconds...\r\n");
+                    HAL_Delay(1000);
+                    NVIC_SystemReset();
+                    break;
+                    
+                case YMODEM_ERROR_TIMEOUT:
+                    printf("\r\nTimeout waiting for file transfer\r\n");
+                    break;
+                    
+                case YMODEM_ERROR_CRC:
+                    printf("\r\nCRC error during file transfer\r\n");
+                    break;
+                    
+                case YMODEM_ERROR_FLASH:
+                    printf("\r\nFlash programming error\r\n");
+                    break;
+                    
+                case YMODEM_ERROR_CANCEL:
+                    printf("\r\nFile transfer cancelled\r\n");
+                    break;
+                    
+                default:
+                    printf("\r\nUnknown error during file transfer\r\n");
+                    break;
+            }
+            
+            /* Blink LED to indicate bootloader mode after transfer attempt */
+            while (1) {
+                HAL_GPIO_TogglePin(RUN_LED_GPIO_Port, RUN_LED_Pin);
+                HAL_Delay(100);
+            }
+        }
+        
+        /* No upgrade flag - check for valid application and jump */
+        printf("No bootloader upgrade flag, checking for valid application...\r\n");
         app_stack_ptr = *(volatile uint32_t*)APP_ADDR;
         uint32_t reset_vector = *(volatile uint32_t*)(APP_ADDR + 4);
         

@@ -170,10 +170,11 @@ static HAL_StatusTypeDef flash_erase_app_area(void)
     }
     
     /* Erase sectors from sector 2 onwards (sectors 0-1 contain bootloader) */
+    /* IMPORTANT: Sector 23 is reserved for bootloader flags - do not erase! */
     erase_init.TypeErase = FLASH_TYPEERASE_SECTORS;
     erase_init.VoltageRange = FLASH_VOLTAGE_RANGE_3; /* 2.7V to 3.6V */
     erase_init.Sector = FLASH_SECTOR_2; /* Start from sector 2 (0x08008000) */
-    erase_init.NbSectors = 10; /* Erase sectors 2-11 (leaving sectors 0-1 for bootloader) */
+    erase_init.NbSectors = 20; /* Erase sectors 2-21 (preserve sectors 0-1 for bootloader and 23 for flags) */
     
     status = HAL_FLASHEx_Erase(&erase_init, &sector_error);
     
