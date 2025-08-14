@@ -61,6 +61,10 @@ void Error_Handler(void);
 #define RUN_LED_GPIO_Port GPIOC
 #define BOOT_Pin GPIO_PIN_3
 #define BOOT_GPIO_Port GPIOC
+#define DEBUG_TX_Pin GPIO_PIN_0
+#define DEBUG_TX_GPIO_Port GPIOA
+#define DEBUG_RX_Pin GPIO_PIN_1
+#define DEBUG_RX_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

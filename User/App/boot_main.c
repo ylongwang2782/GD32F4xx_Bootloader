@@ -5,9 +5,6 @@
 #include "ymodem.h"
 #include "usart.h"
 
-/* External UART handle */
-extern UART_HandleTypeDef huart4;
-
 int boot_main(void) {
     ymodem_file_info_t file_info;
     ymodem_result_t result;

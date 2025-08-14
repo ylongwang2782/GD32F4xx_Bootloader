@@ -5,9 +5,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-/* External UART handle */
-extern UART_HandleTypeDef huart4;
-
 /* Static functions */
 static HAL_StatusTypeDef uart_receive_byte(uint8_t *data, uint32_t timeout);
 static HAL_StatusTypeDef uart_transmit_byte(uint8_t data);
@@ -49,7 +46,7 @@ uint16_t crc16_calc(const uint8_t *data, uint16_t length)
  */
 static HAL_StatusTypeDef uart_receive_byte(uint8_t *data, uint32_t timeout)
 {
-    return HAL_UART_Receive(&huart4, data, 1, timeout);
+    return HAL_UART_Receive(&DEBUG_UART, data, 1, timeout);
 }
 
 /**
@@ -59,7 +56,7 @@ static HAL_StatusTypeDef uart_receive_byte(uint8_t *data, uint32_t timeout)
  */
 static HAL_StatusTypeDef uart_transmit_byte(uint8_t data)
 {
-    return HAL_UART_Transmit(&huart4, &data, 1, 100);
+    return HAL_UART_Transmit(&DEBUG_UART, &data, 1, 100);
 }
 
 /**
@@ -414,7 +411,7 @@ void jump_to_application(void)
         __disable_irq();
         
         /* Deinitialize peripherals */
-        HAL_UART_DeInit(&huart4);
+        HAL_UART_DeInit(&DEBUG_UART);
         
         /* Reset all peripherals and clocks to default state */
         HAL_RCC_DeInit();
