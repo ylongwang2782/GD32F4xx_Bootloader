@@ -21,7 +21,7 @@ int boot_main(void) {
     printf("\r\n");
     
     /* Check KEY1 button state on power-up */
-    if (HAL_GPIO_ReadPin(KEY1_GPIO_Port, KEY1_Pin) == GPIO_PIN_RESET) {
+    if (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_RESET) {
         /* KEY1 pressed during power-up - enter bootloader mode */
         printf("KEY1 detected during power-up\r\n");
         printf("Entering firmware update mode...\r\n");
