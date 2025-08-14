@@ -25,6 +25,29 @@
 /* Application start address */
 #define APP_ADDR                0x08008000
 
+/* RAM configuration for different STM32F4 series */
+#if defined(STM32F429xx) || defined(STM32F439xx)
+    // #define RAM_SIZE_KB         256
+    // #define RAM_END_ADDR        0x20040000  /* 256KB */
+    #define RAM_SIZE_KB         768
+    #define RAM_END_ADDR        0x200C0000  /* 768KB for larger variants */
+#elif defined(STM32F469xx) || defined(STM32F479xx)
+    #define RAM_SIZE_KB         384
+    #define RAM_END_ADDR        0x20060000  /* 384KB */
+#elif defined(STM32F446xx)
+    #define RAM_SIZE_KB         128
+    #define RAM_END_ADDR        0x20020000  /* 128KB */
+#elif defined(STM32F407xx) || defined(STM32F417xx)
+    #define RAM_SIZE_KB         192
+    #define RAM_END_ADDR        0x20030000  /* 192KB */
+#else
+    /* Default configuration - can be overridden */
+    #define RAM_SIZE_KB         768
+    #define RAM_END_ADDR        0x200C0000  /* 768KB for larger variants */
+#endif
+
+#define RAM_START_ADDR          0x20000000
+
 /* YMODEM Result codes */
 typedef enum {
     YMODEM_OK = 0,

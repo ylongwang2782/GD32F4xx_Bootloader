@@ -82,11 +82,12 @@ int boot_main(void) {
         app_stack_ptr = *(volatile uint32_t*)APP_ADDR;
         uint32_t reset_vector = *(volatile uint32_t*)(APP_ADDR + 4);
         
-        /* Improved validation logic */
-        bool stack_valid = (app_stack_ptr >= 0x20000000) && (app_stack_ptr <= 0x20040000);
+        /* Improved validation logic with dynamic RAM size detection */
+        bool stack_valid = (app_stack_ptr >= RAM_START_ADDR) && (app_stack_ptr <= RAM_END_ADDR);
         bool reset_valid = (reset_vector >= APP_ADDR) && (reset_vector < (APP_ADDR + 0x200000)) && ((reset_vector & 0x1) == 0x1);
         bool not_empty = (app_stack_ptr != 0xFFFFFFFF) && (reset_vector != 0xFFFFFFFF);
         
+        printf("MCU RAM Configuration: %d KB (0x%08X - 0x%08X)\r\n", RAM_SIZE_KB, RAM_START_ADDR, RAM_END_ADDR);
         printf("Validation results:\r\n");
         printf("  Stack valid: %s (0x%08X)\r\n", stack_valid ? "YES" : "NO", (unsigned int)app_stack_ptr);
         printf("  Reset valid: %s (0x%08X)\r\n", reset_valid ? "YES" : "NO", (unsigned int)reset_vector);
@@ -101,7 +102,7 @@ int boot_main(void) {
             printf("Flash content at 0x%08X:\r\n", APP_ADDR);
             printf("  Stack Pointer: 0x%08X\r\n", (unsigned int)app_stack_ptr);
             printf("  Reset Vector:  0x%08X\r\n", (unsigned int)(*(volatile uint32_t*)(APP_ADDR + 4)));
-            printf("  Expected stack range: 0x20000000-0x2003FFFF\r\n");
+            printf("  Expected stack range: 0x%08X-0x%08X\r\n", RAM_START_ADDR, RAM_END_ADDR);
             printf("\r\nChecking other possible locations:\r\n");
             
             /* Check if application exists at old location (0x08004000) */

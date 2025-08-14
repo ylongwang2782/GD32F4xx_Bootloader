@@ -391,8 +391,8 @@ void jump_to_application(void)
     uint32_t app_stack_ptr = *(volatile uint32_t*)APP_ADDR;
     uint32_t app_entry_point = *(volatile uint32_t*)(APP_ADDR + 4);
     
-    /* Improved application validation */
-    bool stack_valid = (app_stack_ptr >= 0x20000000) && (app_stack_ptr <= 0x20040000);
+    /* Improved application validation with dynamic RAM size */
+    bool stack_valid = (app_stack_ptr >= RAM_START_ADDR) && (app_stack_ptr <= RAM_END_ADDR);
     bool reset_valid = (app_entry_point >= APP_ADDR) && (app_entry_point < (APP_ADDR + 0x200000)) && ((app_entry_point & 0x1) == 0x1);
     bool not_empty = (app_stack_ptr != 0xFFFFFFFF) && (app_entry_point != 0xFFFFFFFF);
     
@@ -441,6 +441,7 @@ void jump_to_application(void)
         app_func();
     } else {
         printf("No valid application found at 0x%08X\r\n", (unsigned int)APP_ADDR);
-        printf("Stack Pointer value: 0x%08X (invalid)\r\n", (unsigned int)app_stack_ptr);
+        printf("Stack Pointer value: 0x%08X (expected range: 0x%08X-0x%08X)\r\n", 
+               (unsigned int)app_stack_ptr, RAM_START_ADDR, RAM_END_ADDR);
     }
 }
