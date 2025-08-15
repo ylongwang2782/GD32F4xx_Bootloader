@@ -52,7 +52,7 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
-/* Specify the memory areas */
+/* Specify the memory areas for GD32F4xx Bootloader */
 MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 192K
