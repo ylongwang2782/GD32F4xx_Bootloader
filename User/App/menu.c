@@ -27,9 +27,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
 #include "common.h"
-#include "flash_if.h"
 #include "menu.h"
 #include "ymodem.h"
 
@@ -37,14 +35,10 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-pFunction JumpToApplication;
-uint32_t JumpAddress;
-uint32_t FlashProtection = 0;
 uint8_t aFileName[FILE_NAME_LENGTH];
 
 /* Private function prototypes -----------------------------------------------*/
 void SerialDownload(void);
-void SerialUpload(void);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -89,33 +83,7 @@ void SerialDownload(void)
   }
 }
 
-/**
-  * @brief  Upload a file via serial port.
-  * @param  None
-  * @retval None
-  */
-void SerialUpload(void)
-{
-  uint8_t status = 0;
 
-  Serial_PutString((uint8_t *)"\n\n\rSelect Receive File\n\r");
-
-  HAL_UART_Receive(&DEBUG_UART, &status, 1, RX_TIMEOUT);
-  if ( status == CRC16)
-  {
-    /* Transmit the flash image through ymodem protocol */
-    status = Ymodem_Transmit((uint8_t*)APPLICATION_ADDRESS, (const uint8_t*)"UploadedFlashImage.bin", USER_FLASH_SIZE);
-
-    if (status != 0)
-    {
-      Serial_PutString((uint8_t *)"\n\rError Occurred while Transmitting File\n\r");
-    }
-    else
-    {
-      Serial_PutString((uint8_t *)"\n\rFile uploaded successfully \n\r");
-    }
-  }
-}
 
 /**
   * @brief  Display the Main Menu on HyperTerminal
@@ -124,117 +92,26 @@ void SerialUpload(void)
   */
 void Main_Menu(void)
 {
-  uint8_t key = 0;
-
   Serial_PutString((uint8_t *)"\r\n======================================================================");
-  Serial_PutString((uint8_t *)"\r\n=              (C) COPYRIGHT 2016 STMicroelectronics                 =");
+  Serial_PutString((uint8_t *)"\r\n=                          GD32F4xx Bootloader                      =");
   Serial_PutString((uint8_t *)"\r\n=                                                                    =");
-  Serial_PutString((uint8_t *)"\r\n=          STM32F7xx In-Application Programming Application          =");
+  Serial_PutString((uint8_t *)"\r\n=                     Firmware Upgrade Mode                         =");
   Serial_PutString((uint8_t *)"\r\n=                                                                    =");
-  Serial_PutString((uint8_t *)"\r\n=                       By MCD Application Team                      =");
   Serial_PutString((uint8_t *)"\r\n======================================================================");
   Serial_PutString((uint8_t *)"\r\n\r\n");
 
-  while (1)
-  {
+  Serial_PutString((uint8_t *)"Ready for firmware download via YMODEM protocol...\r\n");
+  Serial_PutString((uint8_t *)"Please start sending the firmware file.\r\n\r\n");
 
-    /* Test if any sector of Flash memory where user application will be loaded is write protected */
-    FlashProtection = FLASH_If_GetWriteProtectionStatus();
-    
-    Serial_PutString((uint8_t *)"\r\n=================== Main Menu ============================\r\n\n");
-    Serial_PutString((uint8_t *)"  Download image to the internal Flash ----------------- 1\r\n\n");
-    Serial_PutString((uint8_t *)"  Upload image from the internal Flash ----------------- 2\r\n\n");
-    Serial_PutString((uint8_t *)"  Execute the loaded application ----------------------- 3\r\n\n");
-
-    if(FlashProtection != FLASHIF_PROTECTION_NONE)
-    {
-      Serial_PutString((uint8_t *)"  Disable the write protection ------------------------- 4\r\n\n");
-    }
-    else
-    {
-      Serial_PutString((uint8_t *)"  Enable the write protection -------------------------- 4\r\n\n");
-    }
-    Serial_PutString((uint8_t *)"==========================================================\r\n\n");
-
-    /* Clean the input path */
-    __HAL_UART_FLUSH_DRREGISTER(&DEBUG_UART);
-	
-    /* Receive key */
-    HAL_UART_Receive(&DEBUG_UART, &key, 1, RX_TIMEOUT);
-
-    switch (key)
-    {
-    case '1' :
-      /* Download user application in the Flash */
-      SerialDownload();
-      break;
-    case '2' :
-      /* Upload user application from the Flash */
-      SerialUpload();
-      break;
-    case '3' :
-      Serial_PutString((uint8_t *)"Start program execution......\r\n\n");
-      
-      /* Disable all interrupts */
-      __disable_irq();
-      
-      /* Disable SysTick */
-      SysTick->CTRL = 0;
-      SysTick->LOAD = 0;
-      SysTick->VAL = 0;
-      
-      /* Clear pending interrupts */
-      for (int i = 0; i < 8; i++) {
-          NVIC->ICER[i] = 0xFFFFFFFF;
-          NVIC->ICPR[i] = 0xFFFFFFFF;
-      }
-      
-      /* execute the new program */
-      JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
-      /* Jump to user application */
-      JumpToApplication = (pFunction) JumpAddress;
-      /* Initialize user application's Stack Pointer */
-      __set_MSP(*(__IO uint32_t*) APPLICATION_ADDRESS);
-      JumpToApplication();
-      break;
-    case '4' :
-      if (FlashProtection != FLASHIF_PROTECTION_NONE)
-      {
-        /* Disable the write protection */
-        if (FLASH_If_WriteProtectionConfig(OB_WRPSTATE_DISABLE) == HAL_OK)
-        {
-          Serial_PutString((uint8_t *)"Write Protection disabled...\r\n");
-          Serial_PutString((uint8_t *)"System will now restart...\r\n");
-          /* Launch the option byte loading */
-          HAL_FLASH_OB_Launch();
-          /* Ulock the flash */
-          HAL_FLASH_Unlock();
-        }
-        else
-        {
-          Serial_PutString((uint8_t *)"Error: Flash write un-protection failed...\r\n");
-        }
-      }
-      else
-      {
-        if (FLASH_If_WriteProtectionConfig(OB_WRPSTATE_ENABLE) == HAL_OK)
-        {
-          Serial_PutString((uint8_t *)"Write Protection enabled...\r\n");
-          Serial_PutString((uint8_t *)"System will now restart...\r\n");
-          /* Launch the option byte loading */
-          HAL_FLASH_OB_Launch();
-        }
-        else
-        {
-          Serial_PutString((uint8_t *)"Error: Flash write protection failed...\r\n");
-        }
-      }
-      break;
-	default:
-	Serial_PutString((uint8_t *)"Invalid Number ! ==> The number should be either 1, 2, 3 or 4\r");
-	break;
-    }
-  }
+  /* Automatically start download */
+  SerialDownload();
+  
+  /* After download completion, restart system to run new firmware */
+  Serial_PutString((uint8_t *)"\r\nSystem will restart in 3 seconds...\r\n");
+  HAL_Delay(1000);
+  
+  /* Perform system reset */
+  NVIC_SystemReset();
 }
 
 /**

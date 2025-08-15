@@ -1,16 +1,24 @@
 #include <stdbool.h>
-#include <stdio.h>
 
-#include "common.h"
+#include "bootloader_flag.h"
 #include "main.h"
 #include "menu.h"
 
-extern pFunction JumpToApplication;
-extern uint32_t JumpAddress;
+/* Private variables */
+typedef void (*pFunction)(void);
+pFunction JumpToApplication;
+uint32_t JumpAddress;
 
 int boot_main(void) {
-    /* Test if Key push-button on STM327x6G-EVAL RevB Board is pressed */
-    if (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_RESET) {
+    /* First, check for software upgrade flag */
+    if (check_bootloader_upgrade_flag()) {
+        /* Clear the upgrade flag */
+        clear_bootloader_flag();
+        /* Enter bootloader menu */
+        Main_Menu();
+    }
+    /* Then check if Key push-button is pressed */
+    else if (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_RESET) {
         /* Display main menu */
         Main_Menu();
     }
