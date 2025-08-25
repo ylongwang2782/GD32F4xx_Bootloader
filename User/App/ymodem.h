@@ -1,74 +1,86 @@
-#ifndef __YMODEM_H__
-#define __YMODEM_H__
+/**
+  ******************************************************************************
+  * @file    IAP/IAP_Main/Inc/ymodem.h 
+  * @author  MCD Application Team
+  * @brief   This file provides all the software function headers of the ymodem.c 
+  *          file.
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2017 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
 
-#include "stm32f4xx_hal.h"
-#include <stdbool.h>
-#include <stdint.h>
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __YMODEM_H_
+#define __YMODEM_H_
 
-/* YMODEM Protocol Definitions */
-#define SOH                     0x01    /* Start of 128-byte data packet */
-#define STX                     0x02    /* Start of 1024-byte data packet */
-#define EOT                     0x04    /* End of transmission */
-#define ACK                     0x06    /* Acknowledge */
-#define NAK                     0x15    /* Negative acknowledge */
-#define CAN                     0x18    /* Cancel */
-#define CTRLZ                   0x1A    /* EOF character */
+/* Includes ------------------------------------------------------------------*/
+/* Exported types ------------------------------------------------------------*/
 
-#define YMODEM_PACKET_SIZE_128  128
-#define YMODEM_PACKET_SIZE_1024 1024
-#define YMODEM_PACKET_HEADER    3       /* SOH/STX + packet number + ~packet number */
-#define YMODEM_PACKET_TRAILER   2       /* CRC16 */
+/**
+  * @brief  Comm status structures definition
+  */
+typedef enum
+{
+  COM_OK       = 0x00,
+  COM_ERROR    = 0x01,
+  COM_ABORT    = 0x02,
+  COM_TIMEOUT  = 0x03,
+  COM_DATA     = 0x04,
+  COM_LIMIT    = 0x05
+} COM_StatusTypeDef;
+/**
+  * @}
+  */
 
-#define YMODEM_TIMEOUT_MS       3000  /* 3 second timeout for periodic 'C' transmission */
-#define YMODEM_MAX_ERRORS       255            /* Large number to effectively disable error limit */
+/* Exported constants --------------------------------------------------------*/
+/* Packet structure defines */
+#define PACKET_HEADER_SIZE      ((uint32_t)3)
+#define PACKET_DATA_INDEX       ((uint32_t)4)
+#define PACKET_START_INDEX      ((uint32_t)1)
+#define PACKET_NUMBER_INDEX     ((uint32_t)2)
+#define PACKET_CNUMBER_INDEX    ((uint32_t)3)
+#define PACKET_TRAILER_SIZE     ((uint32_t)2)
+#define PACKET_OVERHEAD_SIZE    (PACKET_HEADER_SIZE + PACKET_TRAILER_SIZE - 1)
+#define PACKET_SIZE             ((uint32_t)128)
+#define PACKET_1K_SIZE          ((uint32_t)1024)
 
-/* Application start address */
-#define APP_ADDR                0x08008000
+/* /-------- Packet in IAP memory ------------------------------------------\
+ * | 0      |  1    |  2     |  3   |  4      | ... | n+4     | n+5  | n+6  | 
+ * |------------------------------------------------------------------------|
+ * | unused | start | number | !num | data[0] | ... | data[n] | crc0 | crc1 |
+ * \------------------------------------------------------------------------/
+ * the first byte is left unused for memory alignment reasons                 */
 
-/* RAM configuration for different STM32F4 series */
-#if defined(STM32F429xx) || defined(STM32F439xx)
-    // #define RAM_SIZE_KB         256
-    // #define RAM_END_ADDR        0x20040000  /* 256KB */
-    #define RAM_SIZE_KB         768
-    #define RAM_END_ADDR        0x200C0000  /* 768KB for larger variants */
-#elif defined(STM32F469xx) || defined(STM32F479xx)
-    #define RAM_SIZE_KB         384
-    #define RAM_END_ADDR        0x20060000  /* 384KB */
-#elif defined(STM32F446xx)
-    #define RAM_SIZE_KB         128
-    #define RAM_END_ADDR        0x20020000  /* 128KB */
-#elif defined(STM32F407xx) || defined(STM32F417xx)
-    #define RAM_SIZE_KB         192
-    #define RAM_END_ADDR        0x20030000  /* 192KB */
-#else
-    /* Default configuration - can be overridden */
-    #define RAM_SIZE_KB         768
-    #define RAM_END_ADDR        0x200C0000  /* 768KB for larger variants */
-#endif
+#define FILE_NAME_LENGTH        ((uint32_t)64)
+#define FILE_SIZE_LENGTH        ((uint32_t)16)
 
-#define RAM_START_ADDR          0x20000000
+#define SOH                     ((uint8_t)0x01)  /* start of 128-byte data packet */
+#define STX                     ((uint8_t)0x02)  /* start of 1024-byte data packet */
+#define EOT                     ((uint8_t)0x04)  /* end of transmission */
+#define ACK                     ((uint8_t)0x06)  /* acknowledge */
+#define NAK                     ((uint8_t)0x15)  /* negative acknowledge */
+#define CA                      ((uint32_t)0x18) /* two of these in succession aborts transfer */
+#define CRC16                   ((uint8_t)0x43)  /* 'C' == 0x43, request 16-bit CRC */
+#define NEGATIVE_BYTE           ((uint8_t)0xFF)
 
-/* YMODEM Result codes */
-typedef enum {
-    YMODEM_OK = 0,
-    YMODEM_COMPLETE = 1,
-    YMODEM_ERROR_TIMEOUT = 2,
-    YMODEM_ERROR_CRC = 3,
-    YMODEM_ERROR_PACKET = 4,
-    YMODEM_ERROR_FLASH = 5,
-    YMODEM_ERROR_CANCEL = 6
-} ymodem_result_t;
+#define ABORT1                  ((uint8_t)0x41)  /* 'A' == 0x41, abort by user */
+#define ABORT2                  ((uint8_t)0x61)  /* 'a' == 0x61, abort by user */
 
-/* File info structure */
-typedef struct {
-    char filename[256];
-    uint32_t filesize;
-    uint32_t received_bytes;
-} ymodem_file_info_t;
+#define NAK_TIMEOUT             ((uint32_t)0x100000)
+#define DOWNLOAD_TIMEOUT        ((uint32_t)1000) /* One second retry delay */
+#define MAX_ERRORS              ((uint32_t)5)
 
-/* Function prototypes */
-ymodem_result_t ymodem_receive_file(ymodem_file_info_t *file_info);
-uint16_t crc16_calc(const uint8_t *data, uint16_t length);
-void jump_to_application(void);
+/* Exported functions ------------------------------------------------------- */
+COM_StatusTypeDef Ymodem_Receive(uint32_t *p_size);
+COM_StatusTypeDef Ymodem_Transmit(uint8_t *p_buf, const uint8_t *p_file_name, uint32_t file_size);
 
-#endif /* __YMODEM_H__ */
+#endif  /* __YMODEM_H_ */
+
