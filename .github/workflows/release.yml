@@ -1,0 +1,81 @@
+name: Build and Release
+
+on:
+    push:
+      tags:
+        - 'v*'
+    workflow_dispatch:   # 手动触发
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  packages: write
+  actions: write
+  id-token: write
+
+jobs:
+  build-and-release:
+    name: Build Firmware and Create Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup CMake
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "3.29.2"
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v4
+        with:
+          version: "1.12.1"
+
+      - name: Setup ARM GCC
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: "14.2.Rel1"
+
+      - name: Build Firmware
+        shell: bash
+        run: |
+          cmake --preset debug
+          cmake --build --preset debug
+
+      - name: Get Version from Git
+        id: get_version
+        shell: bash
+        run: |
+          if git describe --tags --abbrev=0 2>/dev/null; then
+            VERSION=$(git describe --tags --abbrev=0)
+          else
+            VERSION=$(git rev-parse --short HEAD)
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Prepare Release Assets
+        shell: bash
+        run: |
+          cp build/debug/GD32F4xx_Bootloader.hex GD32F4xx-Bootloader-${VERSION}.hex
+          cp build/debug/GD32F4xx_Bootloader.bin GD32F4xx-Bootloader-${VERSION}.bin
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          generate_release_notes: true
+          files: GD32F4xx-Bootloader-${{ steps.get_version.outputs.version }}.hex, GD32F4xx-Bootloader-${{ steps.get_version.outputs.version }}.bin
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean Build Directory
+        shell: bash
+        run: rm -rf build/*
