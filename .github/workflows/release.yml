@@ -43,8 +43,8 @@ jobs:
       - name: Build Firmware
         shell: bash
         run: |
-          cmake --preset debug
-          cmake --build --preset debug
+          cmake --preset Release
+          cmake --build --preset Release
 
       - name: Get Version from Git
         id: get_version
@@ -61,8 +61,8 @@ jobs:
       - name: Prepare Release Assets
         shell: bash
         run: |
-          cp build/debug/GD32F4xx_Bootloader.hex GD32F4xx-Bootloader-${VERSION}.hex
-          cp build/debug/GD32F4xx_Bootloader.bin GD32F4xx-Bootloader-${VERSION}.bin
+          cp build/Release/GD32F4xx_Bootloader.hex GD32F4xx-Bootloader-${VERSION}.hex
+          cp build/Release/GD32F4xx_Bootloader.bin GD32F4xx-Bootloader-${VERSION}.bin
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
