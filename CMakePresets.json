@@ -8,7 +8,8 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "toolchainFile": "${sourceDir}/cmake/gcc-arm-none-eabi.cmake",
             "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "true"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "true",
+                "CMAKE_SYSROOT": "C:/Users/ylong/Documents/env/xpack-arm-none-eabi-gcc-14.2.1-1.1/arm-none-eabi"
             }
         },
         {
