@@ -59,8 +59,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define RUN_LED_Pin GPIO_PIN_13
 #define RUN_LED_GPIO_Port GPIOC
-#define BOOT_Pin GPIO_PIN_3
-#define BOOT_GPIO_Port GPIOC
+#define DIP2_Pin GPIO_PIN_2
+#define DIP2_GPIO_Port GPIOC
+#define DIP1_Pin GPIO_PIN_3
+#define DIP1_GPIO_Port GPIOC
 #define DEBUG_TX_Pin GPIO_PIN_0
 #define DEBUG_TX_GPIO_Port GPIOA
 #define DEBUG_RX_Pin GPIO_PIN_1
