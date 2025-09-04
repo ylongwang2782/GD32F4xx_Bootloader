@@ -68,9 +68,9 @@ target_include_directories(stm32cubemx INTERFACE ${MX_Include_Dirs})
 target_compile_definitions(stm32cubemx INTERFACE ${MX_Defines_Syms})
 
 # Create STM32_Drivers static library
-add_library(STM32_Drivers STATIC ${STM32_Drivers_Src})
-target_include_directories(STM32_Drivers PUBLIC ${MX_Include_Dirs})
-target_compile_definitions(STM32_Drivers PUBLIC ${MX_Defines_Syms})
+add_library(STM32_Drivers OBJECT)
+target_sources(STM32_Drivers PRIVATE ${STM32_Drivers_Src})
+target_link_libraries(STM32_Drivers PUBLIC stm32cubemx)
 
 
 # Add STM32CubeMX generated application sources to the project

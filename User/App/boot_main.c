@@ -19,8 +19,9 @@ int boot_main(void)
         /* Enter bootloader menu */
         Main_Menu();
     }
-    /* Then check if Key push-button is pressed */
-    else if (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_RESET)
+    /* Then check if DIP1 and DIP2 are both pressed */
+    else if (HAL_GPIO_ReadPin(DIP2_GPIO_Port, DIP2_Pin) == GPIO_PIN_RESET &&
+             HAL_GPIO_ReadPin(DIP1_GPIO_Port, DIP1_Pin) == GPIO_PIN_RESET)
     {
         /* Display main menu */
         Main_Menu();
