@@ -6,30 +6,34 @@
 
 /* Private variables */
 typedef void (*pFunction)(void);
-pFunction JumpToApplication;
-uint32_t JumpAddress;
+pFunction jumpToApplication;
+uint32_t jumpAddress;
 
-int boot_main(void) {
+int boot_main(void)
+{
     /* First, check for software upgrade flag */
-    if (check_bootloader_upgrade_flag()) {
+    if (CheckBootloaderUpgradeFlag())
+    {
         /* Clear the upgrade flag */
-        clear_bootloader_flag();
+        ClearBootloaderFlag();
         /* Enter bootloader menu */
         Main_Menu();
     }
     /* Then check if Key push-button is pressed */
-    else if (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_RESET) {
+    else if (HAL_GPIO_ReadPin(BOOT_GPIO_Port, BOOT_Pin) == GPIO_PIN_RESET)
+    {
         /* Display main menu */
         Main_Menu();
     }
     /* Keep the user application running */
-    else {
+    else
+    {
         /* Test if user code is programmed starting from address
          * "APPLICATION_ADDRESS" */
         uint32_t sp = *(__IO uint32_t *)APPLICATION_ADDRESS;
-        if ((sp >= 0x20000000 && sp <= 0x2001FFFF) ||    // SRAM1
-            (sp >= 0x20020000 && sp <= 0x2002FFFF) ||    // SRAM2
-            (sp >= 0x200B0000 && sp <= 0x200BFFFF))      // CCM
+        if ((sp >= 0x20000000 && sp <= 0x2001FFFF) || // SRAM1
+            (sp >= 0x20020000 && sp <= 0x2002FFFF) || // SRAM2
+            (sp >= 0x200B0000 && sp <= 0x200BFFFF))   // CCM
 
         {
             /* Disable all interrupts */
@@ -41,20 +45,22 @@ int boot_main(void) {
             SysTick->VAL = 0;
 
             /* Clear pending interrupts */
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < 8; i++)
+            {
                 NVIC->ICER[i] = 0xFFFFFFFF;
                 NVIC->ICPR[i] = 0xFFFFFFFF;
             }
 
             /* Jump to user application */
-            JumpAddress = *(__IO uint32_t *)(APPLICATION_ADDRESS + 4);
-            JumpToApplication = (pFunction)JumpAddress;
+            jumpAddress = *(__IO uint32_t *)(APPLICATION_ADDRESS + 4);
+            jumpToApplication = (pFunction)jumpAddress;
             /* Initialize user application's Stack Pointer */
             __set_MSP(*(__IO uint32_t *)APPLICATION_ADDRESS);
-            JumpToApplication();
+            jumpToApplication();
         }
     }
 
-    while (1) {
+    while (1)
+    {
     }
 }

@@ -76,3 +76,8 @@ file(GLOB_RECURSE USER_SOURCE_FILES
     "${CMAKE_SOURCE_DIR}/User/*.c"
     "${CMAKE_SOURCE_DIR}/User/*.h"
 )
+
+add_custom_target(format ALL
+    COMMAND clang-format -i ${USER_SOURCE_FILES}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
