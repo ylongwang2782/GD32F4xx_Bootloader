@@ -151,7 +151,9 @@ void SerialPutString(const uint8_t *pString)
     {
         length++;
     }
+    RS485_TX_EN();
     HAL_UART_Transmit(&DEBUG_UART, pString, length, TX_TIMEOUT);
+    RS485_RX_EN();
 }
 
 /**
@@ -166,7 +168,10 @@ HAL_StatusTypeDef SerialPutByte(uint8_t param)
     {
         DEBUG_UART.gState = HAL_UART_STATE_READY;
     }
-    return HAL_UART_Transmit(&DEBUG_UART, &param, 1, TX_TIMEOUT);
+    RS485_TX_EN();
+    HAL_StatusTypeDef status = HAL_UART_Transmit(&DEBUG_UART, &param, 1, TX_TIMEOUT);
+    RS485_RX_EN();
+    return status;
 }
 /**
  * @}

@@ -360,8 +360,10 @@ COM_StatusTypeDef Ymodem_Receive(uint32_t *size)
                                 {
                                     /* End session */
                                     tmp = CA;
+                                    RS485_TX_EN();
                                     HAL_UART_Transmit(&DEBUG_UART, &tmp, 1, NAK_TIMEOUT);
                                     HAL_UART_Transmit(&DEBUG_UART, &tmp, 1, NAK_TIMEOUT);
+                                    RS485_RX_EN();
                                     result = COM_LIMIT;
                                 }
                                 /* erase user application area */
@@ -457,7 +459,9 @@ COM_StatusTypeDef Ymodem_Transmit(uint8_t *buf, const uint8_t *fileName, uint32_
     while ((!ackRecpt) && (result == COM_OK))
     {
         /* Send Packet */
+        RS485_TX_EN();
         HAL_UART_Transmit(&DEBUG_UART, &aPacketData[PACKET_START_INDEX], PACKET_SIZE + PACKET_HEADER_SIZE, NAK_TIMEOUT);
+        RS485_RX_EN();
 
         /* Send CRC or Check Sum based on CRC16_F */
 #ifdef CRC16_F
@@ -521,8 +525,10 @@ COM_StatusTypeDef Ymodem_Transmit(uint8_t *buf, const uint8_t *fileName, uint32_
                 pkt_size = PACKET_SIZE;
             }
 
+            RS485_TX_EN();
             HAL_UART_Transmit(&DEBUG_UART, &aPacketData[PACKET_START_INDEX], pkt_size + PACKET_HEADER_SIZE,
                               NAK_TIMEOUT);
+            RS485_RX_EN();
 
             /* Send CRC or Check Sum based on CRC16_F */
 #ifdef CRC16_F
@@ -619,7 +625,9 @@ COM_StatusTypeDef Ymodem_Transmit(uint8_t *buf, const uint8_t *fileName, uint32_
         }
 
         /* Send Packet */
+        RS485_TX_EN();
         HAL_UART_Transmit(&DEBUG_UART, &aPacketData[PACKET_START_INDEX], PACKET_SIZE + PACKET_HEADER_SIZE, NAK_TIMEOUT);
+        RS485_RX_EN();
 
         /* Send CRC or Check Sum based on CRC16_F */
 #ifdef CRC16_F

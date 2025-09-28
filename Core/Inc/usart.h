@@ -29,16 +29,23 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-#define DEBUG_UART huart4
+// #define DEBUG_UART huart4
+#define DEBUG_UART huart7
+// #define RS485_UART huart7
+#define RS485_TX_EN()   HAL_GPIO_WritePin(RS485_CTRL_GPIO_Port, RS485_CTRL_Pin, GPIO_PIN_SET)   // 发送模式
+#define RS485_RX_EN()   HAL_GPIO_WritePin(RS485_CTRL_GPIO_Port, RS485_CTRL_Pin, GPIO_PIN_RESET) // 接收模式
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart4;
+
+extern UART_HandleTypeDef huart7;
 
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
 void MX_UART4_Init(void);
+void MX_UART7_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
