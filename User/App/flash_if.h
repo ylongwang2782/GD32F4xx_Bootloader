@@ -68,8 +68,8 @@ enum
     FLASHIF_PROTECTION_RDPENABLED = 0x4,
 };
 
-/* End of the Flash address for GD32F4xx (2MB Flash) */
-#define USER_FLASH_END_ADDRESS 0x081FFFFF
+/* End of the Flash address for GD32F4xx (2MB Flash) - Limited to sector 21 to preserve sector 22 and 23 */
+#define USER_FLASH_END_ADDRESS 0x081BFFFF
 /* Define the user application size */
 #define USER_FLASH_SIZE (USER_FLASH_END_ADDRESS - APPLICATION_ADDRESS + 1)
 
